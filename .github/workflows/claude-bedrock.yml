@@ -23,6 +23,10 @@ on:
         description: "Additional tool permissions"
         type: string
         default: "Bash(*),Edit(*),Write(*)"
+      allowed_bots:
+        description: "Comma-separated list of bot usernames allowed to trigger"
+        type: string
+        default: "claude[bot]"
       track_progress:
         description: "Show progress tracking"
         type: string
@@ -60,6 +64,7 @@ jobs:
         with:
           use_bedrock: "true"
           prompt: ${{ inputs.prompt }}
+          allowed_bots: ${{ inputs.allowed_bots }}
           additional_permissions: ${{ inputs.additional_permissions }}
           track_progress: ${{ inputs.track_progress }}
           claude_args: "--model ${{ inputs.model }} --max-turns ${{ inputs.max_turns }}"

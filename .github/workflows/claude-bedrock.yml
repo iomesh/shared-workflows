@@ -10,11 +10,23 @@ on:
       max_turns:
         description: "Max conversation turns"
         type: string
-        default: "10"
+        default: "25"
       aws_region:
         description: "AWS region for Bedrock"
         type: string
         default: "ap-southeast-1"
+      prompt:
+        description: "Prompt for Claude (used for auto-review on PR events)"
+        type: string
+        default: "Review this PR for code quality, correctness, and potential issues."
+      additional_permissions:
+        description: "Additional tool permissions"
+        type: string
+        default: "Bash(*),Edit(*),Write(*)"
+      track_progress:
+        description: "Show progress tracking"
+        type: string
+        default: "true"
     secrets:
       AWS_ROLE_TO_ASSUME:
         required: true
@@ -26,17 +38,20 @@ on:
 jobs:
   claude:
     if: |
+      (github.event_name == 'pull_request') ||
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
       issues: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Generate GitHub App token
         id: app-token
@@ -56,4 +71,7 @@ jobs:
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           use_bedrock: "true"
+          prompt: ${{ inputs.prompt }}
+          additional_permissions: ${{ inputs.additional_permissions }}
+          track_progress: ${{ inputs.track_progress }}
           claude_args: "--model ${{ inputs.model }} --max-turns ${{ inputs.max_turns }}"

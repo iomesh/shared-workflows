@@ -30,10 +30,6 @@ on:
     secrets:
       AWS_ROLE_TO_ASSUME:
         required: true
-      APP_ID:
-        required: true
-      APP_PRIVATE_KEY:
-        required: true
 
 jobs:
   claude:
@@ -53,13 +49,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -69,7 +58,6 @@ jobs:
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
         with:
-          github_token: ${{ steps.app-token.outputs.token }}
           use_bedrock: "true"
           prompt: ${{ inputs.prompt }}
           additional_permissions: ${{ inputs.additional_permissions }}

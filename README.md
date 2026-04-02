@@ -33,8 +33,6 @@ jobs:
     uses: iomesh/shared-workflows/.github/workflows/claude-bedrock.yml@main
     secrets:
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 ```
 
 If replacing an existing `claude-review.yml`, delete the old file to avoid duplicate triggers.
@@ -51,8 +49,6 @@ jobs:
       prompt: "Custom review instructions here"
     secrets:
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 ```
 
 ### Available inputs
@@ -71,5 +67,3 @@ jobs:
 | Secret | Value |
 |--------|-------|
 | `AWS_ROLE_TO_ASSUME` | `arn:aws:iam::457615671886:role/GitHubActionsClaudeCode` |
-| `APP_ID` | GitHub App ID |
-| `APP_PRIVATE_KEY` | GitHub App private key (.pem) |

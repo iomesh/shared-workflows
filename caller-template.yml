@@ -16,5 +16,3 @@ jobs:
     uses: iomesh/shared-workflows/.github/workflows/claude-bedrock.yml@main
     secrets:
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

@@ -6,7 +6,7 @@ on:
       model:
         description: "Bedrock model ID"
         type: string
-        default: "ap-southeast-1.anthropic.claude-sonnet-4-6-v1"
+        default: "anthropic.claude-sonnet-4-6"
       max_turns:
         description: "Max conversation turns"
         type: string

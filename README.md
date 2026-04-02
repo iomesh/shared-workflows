@@ -44,7 +44,7 @@ jobs:
   claude:
     uses: iomesh/shared-workflows/.github/workflows/claude-bedrock.yml@main
     with:
-      model: "ap-southeast-1.anthropic.claude-opus-4-6-v1"
+      model: "global.anthropic.claude-opus-4-6-v1"
       max_turns: "30"
       prompt: "Custom review instructions here"
     secrets:
@@ -55,7 +55,7 @@ jobs:
 
 | Input | Default | Description |
 |-------|---------|-------------|
-| `model` | `ap-southeast-1.anthropic.claude-sonnet-4-6-v1` | Bedrock model ID |
+| `model` | `global.anthropic.claude-sonnet-4-6` | Bedrock model ID (Global CRIS inference profile) |
 | `max_turns` | `25` | Max conversation turns |
 | `aws_region` | `ap-southeast-1` | AWS region |
 | `prompt` | `"Review this PR..."` | Prompt for auto-review |

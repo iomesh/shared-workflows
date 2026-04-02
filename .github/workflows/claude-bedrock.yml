@@ -1,0 +1,59 @@
+name: Claude Code (Bedrock)
+
+on:
+  workflow_call:
+    inputs:
+      model:
+        description: "Bedrock model ID"
+        type: string
+        default: "ap-southeast-1.anthropic.claude-sonnet-4-6-v1"
+      max_turns:
+        description: "Max conversation turns"
+        type: string
+        default: "10"
+      aws_region:
+        description: "AWS region for Bedrock"
+        type: string
+        default: "ap-southeast-1"
+    secrets:
+      AWS_ROLE_TO_ASSUME:
+        required: true
+      APP_ID:
+        required: true
+      APP_PRIVATE_KEY:
+        required: true
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ steps.app-token.outputs.token }}
+          use_bedrock: "true"
+          claude_args: "--model ${{ inputs.model }} --max-turns ${{ inputs.max_turns }}"

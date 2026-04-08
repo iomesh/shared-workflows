@@ -32,7 +32,7 @@ on:
         type: string
         default: "true"
     secrets:
-      AWS_ROLE_TO_ASSUME:
+      AWS_BEARER_TOKEN_BEDROCK:
         required: true
 
 jobs:
@@ -47,17 +47,12 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      actions: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ inputs.aws_region }}
 
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
@@ -68,3 +63,6 @@ jobs:
           additional_permissions: ${{ inputs.additional_permissions }}
           track_progress: ${{ inputs.track_progress }}
           claude_args: "--model ${{ inputs.model }} --max-turns ${{ inputs.max_turns }}"
+        env:
+          AWS_BEARER_TOKEN_BEDROCK: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+          AWS_REGION: ${{ inputs.aws_region }}

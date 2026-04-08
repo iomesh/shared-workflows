@@ -14,5 +14,4 @@ on:
 jobs:
   claude:
     uses: iomesh/shared-workflows/.github/workflows/claude-bedrock.yml@main
-    secrets:
-      AWS_BEARER_TOKEN_BEDROCK: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+    secrets: inherit

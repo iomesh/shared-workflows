@@ -10,7 +10,7 @@ on:
       max_turns:
         description: "Max conversation turns"
         type: string
-        default: "25"
+        default: "50"
       aws_region:
         description: "AWS region for Bedrock"
         type: string

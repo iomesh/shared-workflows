@@ -55,6 +55,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Claude Code
+        id: claude
         uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
@@ -62,7 +63,19 @@ jobs:
           allowed_bots: ${{ inputs.allowed_bots }}
           additional_permissions: ${{ inputs.additional_permissions }}
           track_progress: ${{ inputs.track_progress }}
+          show_full_output: "true"
           claude_args: "--model ${{ inputs.model }} --max-turns ${{ inputs.max_turns }}"
         env:
           AWS_BEARER_TOKEN_BEDROCK: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
           AWS_REGION: ${{ inputs.aws_region }}
+
+      # The action reports success even when Claude's run ends with is_error: true
+      # (e.g. Bedrock throttling), leaving the PR comment stuck at the placeholder.
+      - name: Fail job if Claude execution errored
+        if: steps.claude.outputs.execution_file != ''
+        run: |
+          is_error=$(jq -r '[.[] | select(.type == "result") | .is_error] | first // true' "${{ steps.claude.outputs.execution_file }}")
+          if [ "$is_error" != "false" ]; then
+            echo "::error::Claude execution failed (is_error=$is_error); the PR comment was likely never updated with results. Check the action output above for the underlying API error."
+            exit 1
+          fi

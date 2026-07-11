@@ -1,18 +1,26 @@
-name: Claude Code (Bedrock)
+# Multi-provider Claude Code workflow. Despite the filename (kept so existing
+# `uses: ...claude-bedrock.yml@main` references don't break), it supports:
+#   - fireworks (default): GLM-5.2 via Fireworks' Anthropic-compatible endpoint
+#   - bedrock:             Claude via Amazon Bedrock
+name: Claude Code
 
 on:
   workflow_call:
     inputs:
-      model:
-        description: "Bedrock model ID"
+      provider:
+        description: "Inference provider: fireworks | bedrock"
         type: string
-        default: "global.anthropic.claude-sonnet-4-6"
+        default: "fireworks"
+      model:
+        description: "Model ID; empty = provider default (fireworks: accounts/fireworks/models/glm-5p2, bedrock: global.anthropic.claude-sonnet-4-6)"
+        type: string
+        default: ""
       max_turns:
         description: "Max conversation turns"
         type: string
         default: "100"
       aws_region:
-        description: "AWS region for Bedrock"
+        description: "AWS region for Bedrock (bedrock provider only)"
         type: string
         default: "ap-southeast-1"
       prompt:
@@ -34,6 +42,8 @@ on:
     secrets:
       AWS_BEARER_TOKEN_BEDROCK:
         required: false
+      FIREWORKS_API_KEY:
+        required: false
 
 jobs:
   claude:
@@ -54,23 +64,41 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve provider defaults
+        id: cfg
+        env:
+          PROVIDER: ${{ inputs.provider }}
+          MODEL: ${{ inputs.model }}
+        run: |
+          case "$PROVIDER" in
+            fireworks) default_model="accounts/fireworks/models/glm-5p2" ;;
+            bedrock)   default_model="global.anthropic.claude-sonnet-4-6" ;;
+            *) echo "::error::Unknown provider '$PROVIDER' (expected: fireworks | bedrock)"; exit 1 ;;
+          esac
+          echo "model=${MODEL:-$default_model}" >> "$GITHUB_OUTPUT"
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
-          use_bedrock: "true"
+          use_bedrock: ${{ inputs.provider == 'bedrock' && 'true' || 'false' }}
+          # Fireworks accepts the key via the standard x-api-key header, which is
+          # how claude-code-action forwards anthropic_api_key.
+          anthropic_api_key: ${{ inputs.provider == 'fireworks' && secrets.FIREWORKS_API_KEY || '' }}
           prompt: ${{ inputs.prompt }}
           allowed_bots: ${{ inputs.allowed_bots }}
           additional_permissions: ${{ inputs.additional_permissions }}
           track_progress: ${{ inputs.track_progress }}
           show_full_output: "true"
-          claude_args: "--model ${{ inputs.model }} --max-turns ${{ inputs.max_turns }}"
+          claude_args: "--model ${{ steps.cfg.outputs.model }} --max-turns ${{ inputs.max_turns }}"
         env:
-          AWS_BEARER_TOKEN_BEDROCK: ${{ secrets.AWS_BEARER_TOKEN_BEDROCK }}
+          # Unused entries resolve to "" and are ignored (empty is falsy to the CLI).
+          AWS_BEARER_TOKEN_BEDROCK: ${{ inputs.provider == 'bedrock' && secrets.AWS_BEARER_TOKEN_BEDROCK || '' }}
           AWS_REGION: ${{ inputs.aws_region }}
+          ANTHROPIC_BASE_URL: ${{ inputs.provider == 'fireworks' && 'https://api.fireworks.ai/inference' || '' }}
 
       # The action reports success even when Claude's run ends with is_error: true
-      # (e.g. Bedrock throttling), leaving the PR comment stuck at the placeholder.
+      # (e.g. rate limiting), leaving the PR comment stuck at the placeholder.
       - name: Fail job if Claude execution errored
         if: steps.claude.outputs.execution_file != ''
         run: |

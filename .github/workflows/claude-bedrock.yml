@@ -74,7 +74,9 @@ jobs:
       - name: Fail job if Claude execution errored
         if: steps.claude.outputs.execution_file != ''
         run: |
-          is_error=$(jq -r '[.[] | select(.type == "result") | .is_error] | first // true' "${{ steps.claude.outputs.execution_file }}")
+          # NB: don't use `first // true` here — jq's `//` treats `false` as empty,
+          # so a successful run (is_error: false) would evaluate to true and fail the job.
+          is_error=$(jq -r '[.[] | select(.type == "result") | .is_error] | if length == 0 then "no_result" else (last | tostring) end' "${{ steps.claude.outputs.execution_file }}")
           if [ "$is_error" != "false" ]; then
             echo "::error::Claude execution failed (is_error=$is_error); the PR comment was likely never updated with results. Check the action output above for the underlying API error."
             exit 1

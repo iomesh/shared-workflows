@@ -1,6 +1,6 @@
 # Multi-provider Claude Code workflow. Despite the filename (kept so existing
 # `uses: ...claude-bedrock.yml@main` references don't break), it supports:
-#   - fireworks (default): GLM-5.2 via Fireworks' Anthropic-compatible endpoint
+#   - fireworks (default): GLM-5.3 via Fireworks' Anthropic-compatible endpoint
 #   - bedrock:             Claude via Amazon Bedrock
 name: Claude Code
 
@@ -12,7 +12,7 @@ on:
         type: string
         default: "fireworks"
       model:
-        description: "Model ID; empty = provider default (fireworks: accounts/fireworks/models/glm-5p2, bedrock: global.anthropic.claude-sonnet-4-6)"
+        description: "Model ID; empty = provider default (fireworks: accounts/fireworks/models/glm-5p3, bedrock: global.anthropic.claude-sonnet-4-6)"
         type: string
         default: ""
       max_turns:
@@ -71,7 +71,7 @@ jobs:
           MODEL: ${{ inputs.model }}
         run: |
           case "$PROVIDER" in
-            fireworks) default_model="accounts/fireworks/models/glm-5p2" ;;
+            fireworks) default_model="accounts/fireworks/models/glm-5p3" ;;
             bedrock)   default_model="global.anthropic.claude-sonnet-4-6" ;;
             *) echo "::error::Unknown provider '$PROVIDER' (expected: fireworks | bedrock)"; exit 1 ;;
           esac
